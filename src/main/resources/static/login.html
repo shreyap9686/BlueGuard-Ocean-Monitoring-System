@@ -1,0 +1,175 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>BlueGuard | Login</title>
+
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: Arial, sans-serif;
+        }
+
+        body {
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            background: linear-gradient(135deg, #061b2c, #064b63);
+            color: white;
+        }
+
+        .login-container {
+            width: 380px;
+            padding: 40px;
+            background: rgba(255, 255, 255, 0.09);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 18px;
+            box-shadow: 0 10px 35px rgba(0, 0, 0, 0.3);
+        }
+
+        .logo {
+            text-align: center;
+            font-size: 30px;
+            font-weight: bold;
+            color: #42d9e8;
+            margin-bottom: 10px;
+        }
+
+        .subtitle {
+            text-align: center;
+            color: #c4dce5;
+            margin-bottom: 30px;
+        }
+
+        h2 {
+            text-align: center;
+            margin-bottom: 25px;
+        }
+
+        label {
+            display: block;
+            margin: 15px 0 8px;
+        }
+
+        input {
+            width: 100%;
+            padding: 13px;
+            border: 1px solid #477184;
+            border-radius: 8px;
+            background: #102f42;
+            color: white;
+            outline: none;
+        }
+
+        input:focus {
+            border-color: #42d9e8;
+        }
+
+        button {
+            width: 100%;
+            padding: 14px;
+            margin-top: 25px;
+            border: none;
+            border-radius: 8px;
+            background: #16b8c9;
+            color: #062536;
+            font-size: 16px;
+            font-weight: bold;
+            cursor: pointer;
+        }
+
+        button:hover {
+            background: #42d9e8;
+        }
+
+        .message {
+            text-align: center;
+            margin-top: 15px;
+            font-size: 14px;
+        }
+
+        .register-link {
+            text-align: center;
+            margin-top: 22px;
+            color: #c4dce5;
+        }
+
+        a {
+            color: #42d9e8;
+            text-decoration: none;
+        }
+    </style>
+</head>
+
+<body>
+
+<div class="login-container">
+
+    <div class="logo">🌊 BlueGuard</div>
+    <p class="subtitle">Smart Ocean Monitoring System</p>
+
+    <h2>Welcome Back!</h2>
+
+    <form id="loginForm">
+
+        <label>Email Address</label>
+        <input type="email" id="email" placeholder="Enter your email" required>
+
+        <label>Password</label>
+        <input type="password" id="password" placeholder="Enter your password" required>
+
+        <button type="submit">Login</button>
+
+        <p class="message" id="message"></p>
+
+    </form>
+
+    <p class="register-link">
+        Don't have an account?
+        <a href="register.html">Create Account</a>
+    </p>
+
+</div>
+
+<script>
+    document.getElementById("loginForm").addEventListener("submit", async function(event) {
+        event.preventDefault();
+
+        const email = document.getElementById("email").value;
+        const password = document.getElementById("password").value;
+        const message = document.getElementById("message");
+
+        message.textContent = "Checking credentials...";
+
+        try {
+            const response = await fetch("/api/auth/login", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json"
+                },
+                body: JSON.stringify({ email, password })
+            });
+
+            const data = await response.json();
+
+            if (response.ok) {
+                message.textContent = "Login successful! Welcome to BlueGuard.";
+                message.style.color = "#42e89a";
+            } else {
+                message.textContent = data.error || "Login failed.";
+                message.style.color = "#ff8585";
+            }
+
+        } catch (error) {
+            message.textContent = "Unable to connect to the server.";
+            message.style.color = "#ff8585";
+        }
+    });
+</script>
+
+</body>
+</html>
