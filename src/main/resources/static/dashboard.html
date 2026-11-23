@@ -1,0 +1,789 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>BlueGuard | Ocean Monitoring System</title>
+
+    <!-- Leaflet CSS -->
+    <link rel="stylesheet"
+          href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
+
+    <style>
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: Arial, sans-serif;
+        }
+
+        body {
+            background: #071a2b;
+            color: white;
+        }
+
+        .layout {
+            display: flex;
+            min-height: 100vh;
+        }
+
+        /* SIDEBAR */
+
+        .sidebar {
+            width: 250px;
+            min-width: 250px;
+            background: #0b263b;
+            padding: 25px 15px;
+            border-right: 1px solid #173d52;
+        }
+
+        .logo {
+            color: #35d5e5;
+            font-size: 25px;
+            font-weight: bold;
+            margin-bottom: 40px;
+            padding-left: 12px;
+        }
+
+        .nav-link {
+            display: block;
+            padding: 15px;
+            margin-bottom: 8px;
+            color: #b8d1df;
+            text-decoration: none;
+            border-radius: 8px;
+        }
+
+        .nav-link:hover,
+        .nav-link.active {
+            background: #16465c;
+            color: #42d9e8;
+        }
+
+        /* MAIN */
+
+        .main {
+            flex: 1;
+            min-width: 0;
+            padding: 25px;
+        }
+
+        .topbar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 35px;
+            gap: 15px;
+        }
+
+        .topbar h2 {
+            font-size: 24px;
+        }
+
+        .profile {
+            color: #42d9e8;
+            font-weight: bold;
+        }
+
+        .welcome {
+            margin-bottom: 25px;
+        }
+
+        .welcome h1 {
+            font-size: 28px;
+            margin-bottom: 8px;
+        }
+
+        .welcome p {
+            color: #9bb9c9;
+        }
+
+        /* STATISTICS */
+
+        .stats {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 18px;
+            margin-bottom: 25px;
+        }
+
+        .card {
+            background: #10334a;
+            border: 1px solid #20546c;
+            border-radius: 12px;
+            padding: 22px;
+        }
+
+        .card p {
+            color: #a9c7d6;
+            font-size: 14px;
+        }
+
+        .card h2 {
+            font-size: 28px;
+            margin-top: 15px;
+            color: #42d9e8;
+        }
+
+        .status {
+            margin-top: 10px;
+            color: #54e6a0;
+            font-size: 13px;
+        }
+
+        /* CONTENT */
+
+        .content-grid {
+            display: grid;
+            grid-template-columns: 2fr 1fr;
+            gap: 20px;
+            margin-bottom: 25px;
+        }
+
+        .section-title {
+            font-size: 19px;
+            margin-bottom: 20px;
+        }
+
+        /* MAP */
+
+        #map {
+            height: 420px;
+            width: 100%;
+            border-radius: 10px;
+            z-index: 1;
+        }
+
+        .leaflet-popup-content-wrapper {
+            border-radius: 10px;
+        }
+
+        .leaflet-popup-content {
+            color: #102b3c;
+            line-height: 1.7;
+            min-width: 190px;
+        }
+
+        .leaflet-popup-content h3 {
+            color: #087e9a;
+            margin-bottom: 8px;
+        }
+
+        /* LOCATION DETAILS */
+
+        .location-panel {
+            background: #10334a;
+            border: 1px solid #20546c;
+            border-radius: 12px;
+            padding: 22px;
+            margin-bottom: 25px;
+        }
+
+        .location-panel h3 {
+            color: #42d9e8;
+            margin-bottom: 15px;
+        }
+
+        .location-details {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 15px;
+        }
+
+        .detail-box {
+            background: #16445b;
+            padding: 15px;
+            border-radius: 8px;
+        }
+
+        .detail-box p {
+            color: #a9c7d6;
+            font-size: 13px;
+        }
+
+        .detail-box h3 {
+            margin-top: 8px;
+            font-size: 21px;
+        }
+
+        /* ALERTS */
+
+        .alert-item {
+            padding: 15px;
+            border-left: 4px solid #ffae42;
+            background: #17394e;
+            margin-bottom: 14px;
+            border-radius: 5px;
+        }
+
+        .alert-item p {
+            color: #b9d1de;
+            font-size: 13px;
+            margin-top: 7px;
+        }
+
+        .alert-item.danger {
+            border-left-color: #ff6262;
+        }
+
+        .alert-item.safe {
+            border-left-color: #43d99b;
+        }
+
+        /* ANALYTICS */
+
+        .analytics {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+        }
+
+        .chart-placeholder {
+            height: 190px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            color: #42d9e8;
+            border: 1px dashed #39728b;
+            border-radius: 10px;
+            text-align: center;
+        }
+
+        footer {
+            margin-top: 30px;
+            text-align: center;
+            color: #7699aa;
+            font-size: 13px;
+        }
+
+        /* RESPONSIVE */
+
+        @media(max-width: 1000px) {
+
+            .stats {
+                grid-template-columns: repeat(2, 1fr);
+            }
+
+            .content-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .location-details {
+                grid-template-columns: repeat(2, 1fr);
+            }
+        }
+
+        @media(max-width: 650px) {
+
+            .sidebar {
+                width: 75px;
+                min-width: 75px;
+                padding: 20px 8px;
+            }
+
+            .logo {
+                font-size: 12px;
+                padding: 0;
+            }
+
+            .nav-link {
+                font-size: 11px;
+                padding: 12px 5px;
+                text-align: center;
+            }
+
+            .main {
+                padding: 15px;
+            }
+
+            .stats,
+            .analytics {
+                grid-template-columns: 1fr;
+            }
+
+            .location-details {
+                grid-template-columns: 1fr;
+            }
+
+            .topbar h2 {
+                font-size: 18px;
+            }
+        }
+
+    </style>
+
+</head>
+
+<body>
+
+<div class="layout">
+
+    <!-- SIDEBAR -->
+
+    <aside class="sidebar">
+
+        <div class="logo">🌊 BlueGuard</div>
+
+        <a class="nav-link active" href="dashboard.html">
+            🏠 Dashboard
+        </a>
+
+        <a class="nav-link" href="#">
+            🌊 Live Monitoring
+        </a>
+
+        <a class="nav-link" href="#map-section">
+            🗺️ Ocean Map
+        </a>
+
+        <a class="nav-link" href="#">
+            ⚠️ Threat Detection
+        </a>
+
+        <a class="nav-link" href="#alerts-section">
+            🔔 Alerts
+        </a>
+
+        <a class="nav-link" href="#analytics-section">
+            📊 Reports
+        </a>
+
+        <a class="nav-link" href="#">
+            ⚙️ Settings
+        </a>
+
+    </aside>
+
+
+    <!-- MAIN CONTENT -->
+
+    <main class="main">
+
+        <header class="topbar">
+
+            <h2>Ocean Monitoring Dashboard</h2>
+
+            <div class="profile">
+                👤 Shreya
+            </div>
+
+        </header>
+
+
+        <!-- WELCOME -->
+
+        <section class="welcome">
+
+            <h1>Welcome to BlueGuard!</h1>
+
+            <p>
+                Your intelligent ocean monitoring and coastal
+                threat detection platform.
+            </p>
+
+        </section>
+
+
+        <!-- STATISTICS -->
+
+        <section class="stats">
+
+            <div class="card">
+
+                <p>🌡️ Water Temperature</p>
+
+                <h2>27.6°C</h2>
+
+                <div class="status">● Normal</div>
+
+            </div>
+
+
+            <div class="card">
+
+                <p>🌊 Wave Height</p>
+
+                <h2>1.7 m</h2>
+
+                <div class="status">● Stable</div>
+
+            </div>
+
+
+            <div class="card">
+
+                <p>💨 Wind Speed</p>
+
+                <h2>19 km/h</h2>
+
+                <div class="status">● Moderate</div>
+
+            </div>
+
+
+            <div class="card">
+
+                <p>📏 Sea Level</p>
+
+                <h2>0.8 m</h2>
+
+                <div class="status">● Normal</div>
+
+            </div>
+
+        </section>
+
+
+        <!-- MAP AND ALERTS -->
+
+        <section class="content-grid">
+
+            <div class="card" id="map-section">
+
+                <h3 class="section-title">
+                    🗺️ Karnataka Coastal Monitoring Map
+                </h3>
+
+                <div id="map"></div>
+
+            </div>
+
+
+            <!-- ALERTS -->
+
+            <div class="card" id="alerts-section">
+
+                <h3 class="section-title">
+                    🔔 Recent Ocean Alerts
+                </h3>
+
+
+                <div class="alert-item danger">
+
+                    <strong>⚠️ High Wave Alert</strong>
+
+                    <p>
+                        Demonstration warning for elevated wave activity.
+                    </p>
+
+                </div>
+
+
+                <div class="alert-item">
+
+                    <strong>🌊 Ocean Activity</strong>
+
+                    <p>
+                        Moderate ocean movement observed.
+                    </p>
+
+                </div>
+
+
+                <div class="alert-item safe">
+
+                    <strong>✅ Monitoring Active</strong>
+
+                    <p>
+                        Monitoring interface is operational.
+                    </p>
+
+                </div>
+
+            </div>
+
+        </section>
+
+
+        <!-- SELECTED LOCATION DETAILS -->
+
+        <section class="location-panel">
+
+            <h3 id="selectedLocation">
+                📍 Select a coastal location on the map
+            </h3>
+
+            <div class="location-details">
+
+                <div class="detail-box">
+
+                    <p>🌡️ Temperature</p>
+
+                    <h3 id="temperature">--</h3>
+
+                </div>
+
+
+                <div class="detail-box">
+
+                    <p>🌊 Wave Height</p>
+
+                    <h3 id="waveHeight">--</h3>
+
+                </div>
+
+
+                <div class="detail-box">
+
+                    <p>💨 Wind Speed</p>
+
+                    <h3 id="windSpeed">--</h3>
+
+                </div>
+
+
+                <div class="detail-box">
+
+                    <p>📏 Sea Level</p>
+
+                    <h3 id="seaLevel">--</h3>
+
+                </div>
+
+            </div>
+
+            <p id="monitoringStatus"
+               style="margin-top:18px;color:#54e6a0;">
+                Monitoring Status: Waiting for location selection
+            </p>
+
+        </section>
+
+
+        <!-- ANALYTICS -->
+
+        <section class="analytics" id="analytics-section">
+
+            <div class="card">
+
+                <h3 class="section-title">
+                    📈 Wave Height Analytics
+                </h3>
+
+                <div class="chart-placeholder">
+                    Wave Height Chart — Coming Soon
+                </div>
+
+            </div>
+
+
+            <div class="card">
+
+                <h3 class="section-title">
+                    🌡️ Temperature Analytics
+                </h3>
+
+                <div class="chart-placeholder">
+                    Temperature Chart — Coming Soon
+                </div>
+
+            </div>
+
+        </section>
+
+
+        <footer>
+
+            © 2026 BlueGuard | Smart Ocean Monitoring System
+
+        </footer>
+
+    </main>
+
+</div>
+
+
+<!-- LEAFLET JAVASCRIPT -->
+
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+
+
+<script>
+
+    // CHECK LEAFLET LIBRARY
+
+    if (typeof L === "undefined") {
+
+        alert("Map library could not load. Please check your internet connection.");
+
+    } else {
+
+        // INITIALIZE MAP
+
+        const map = L.map('map').setView([13.2, 74.75], 8);
+
+
+        // OPEN STREET MAP
+
+        L.tileLayer(
+            'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',
+            {
+                attribution: '&copy; OpenStreetMap contributors',
+                maxZoom: 19
+            }
+        ).addTo(map);
+
+
+        // KARNATAKA COASTAL LOCATIONS
+        // ALL VALUES BELOW ARE SAMPLE DATA.
+
+        const locations = [
+
+            {
+                name: "Karwar",
+                coords: [14.81, 74.13],
+                temperature: "27.2°C",
+                wave: "1.2 m",
+                wind: "16 km/h",
+                seaLevel: "0.7 m",
+                status: "Normal"
+            },
+
+            {
+                name: "Honnavar",
+                coords: [14.28, 74.44],
+                temperature: "28.1°C",
+                wave: "1.8 m",
+                wind: "20 km/h",
+                seaLevel: "0.9 m",
+                status: "Moderate"
+            },
+
+            {
+                name: "Kundapura",
+                coords: [13.62, 74.69],
+                temperature: "27.8°C",
+                wave: "1.5 m",
+                wind: "18 km/h",
+                seaLevel: "0.8 m",
+                status: "Normal"
+            },
+
+            {
+                name: "Udupi",
+                coords: [13.34, 74.75],
+                temperature: "28.4°C",
+                wave: "2.1 m",
+                wind: "23 km/h",
+                seaLevel: "1.0 m",
+                status: "Warning"
+            },
+
+            {
+                name: "Mangaluru",
+                coords: [12.91, 74.86],
+                temperature: "27.6°C",
+                wave: "1.7 m",
+                wind: "19 km/h",
+                seaLevel: "0.8 m",
+                status: "Normal"
+            }
+
+        ];
+
+
+        // DISPLAY SELECTED LOCATION DETAILS
+
+        function showLocationDetails(location) {
+
+            document.getElementById("selectedLocation").textContent =
+                "📍 " + location.name + " Coastal Monitoring";
+
+
+            document.getElementById("temperature").textContent =
+                location.temperature;
+
+
+            document.getElementById("waveHeight").textContent =
+                location.wave;
+
+
+            document.getElementById("windSpeed").textContent =
+                location.wind;
+
+
+            document.getElementById("seaLevel").textContent =
+                location.seaLevel;
+
+
+            const statusElement =
+                document.getElementById("monitoringStatus");
+
+            statusElement.textContent =
+                "Monitoring Status: " + location.status;
+
+            if (location.status === "Warning") {
+
+                statusElement.style.color = "#ff6262";
+
+            } else {
+
+                statusElement.style.color = "#54e6a0";
+
+            }
+
+        }
+
+
+        // ADD MARKERS TO MAP
+
+        locations.forEach(function(location) {
+
+            const popupContent = `
+
+                <div>
+
+                    <h3>${location.name}</h3>
+
+                    <hr>
+
+                    <p>🌡️ Temperature: ${location.temperature}</p>
+
+                    <p>🌊 Wave Height: ${location.wave}</p>
+
+                    <p>💨 Wind Speed: ${location.wind}</p>
+
+                    <p>📏 Sea Level: ${location.seaLevel}</p>
+
+                    <p><b>Status: ${location.status}</b></p>
+
+                </div>
+
+            `;
+
+
+            const marker = L.marker(location.coords).addTo(map);
+
+
+            marker.bindPopup(popupContent);
+
+
+            // CLICK MARKER TO UPDATE DASHBOARD PANEL
+
+            marker.on('click', function() {
+
+                showLocationDetails(location);
+
+            });
+
+        });
+
+
+        // FIX MAP DISPLAY AFTER INITIALIZATION
+
+        setTimeout(function() {
+
+            map.invalidateSize();
+
+        }, 300);
+
+    }
+
+</script>
+
+</body>
+
+</html>

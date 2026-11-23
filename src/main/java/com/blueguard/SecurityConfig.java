@@ -27,7 +27,9 @@ public class SecurityConfig {
                                 "/index.html",
                                 "/login.html",
                                 "/register.html",
-                                "/api/auth/**"
+                                "/dashboard.html",
+                                "/api/auth/**",
+                                "/api/ocean/**"
                         ).permitAll()
                         .anyRequest().authenticated()
                 );
