@@ -392,65 +392,42 @@
         <section class="stats">
 
             <div class="card">
-
                 <p>🌡️ Water Temperature</p>
-
-                <h2>27.6°C</h2>
-
-                <div class="status">● Normal</div>
-
+                <h2 id="statTemperature">--</h2>
+                <div class="status">● Database Reading</div>
             </div>
 
-
             <div class="card">
-
                 <p>🌊 Wave Height</p>
-
-                <h2>1.7 m</h2>
-
-                <div class="status">● Stable</div>
-
+                <h2 id="statWaveHeight">--</h2>
+                <div class="status">● Database Reading</div>
             </div>
 
-
             <div class="card">
-
                 <p>💨 Wind Speed</p>
-
-                <h2>19 km/h</h2>
-
-                <div class="status">● Moderate</div>
-
+                <h2 id="statWindSpeed">--</h2>
+                <div class="status">● Database Reading</div>
             </div>
 
-
             <div class="card">
-
                 <p>📏 Sea Level</p>
-
-                <h2>0.8 m</h2>
-
-                <div class="status">● Normal</div>
-
+                <h2 id="statSeaLevel">--</h2>
+                <div class="status">● Database Reading</div>
             </div>
 
         </section>
 
+        <!-- MAP SECTION -->
 
-        <!-- MAP AND ALERTS -->
+        <div class="card" id="map-section">
 
-        <section class="content-grid">
+            <h3 class="section-title">
+                🗺️ Karnataka Coastal Monitoring Map
+            </h3>
 
-            <div class="card" id="map-section">
+            <div id="map"></div>
 
-                <h3 class="section-title">
-                    🗺️ Karnataka Coastal Monitoring Map
-                </h3>
-
-                <div id="map"></div>
-
-            </div>
-
+        </div>
 
             <!-- ALERTS -->
 
@@ -759,6 +736,9 @@
 
 
             marker.bindPopup(popupContent);
+            // STORE MARKER REFERENCE
+            location.marker = marker;
+
 
 
             // CLICK MARKER TO UPDATE DASHBOARD PANEL
@@ -770,7 +750,97 @@
             });
 
         });
+// FETCH OCEAN READINGS FROM SPRING BOOT API
 
+        fetch("/api/ocean/readings")
+
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error("Failed to fetch ocean readings");
+                }
+
+                return response.json();
+            })
+
+            .then(data => {
+
+                console.log("Ocean Readings:", data);
+
+                if (data.length === 0) {
+                    console.log("No ocean readings available");
+                    return;
+                }
+
+                // GET THE LATEST READING
+                const reading = data[data.length - 1];
+                // UPDATE TOP STATISTICS CARDS
+
+                document.getElementById("statTemperature").textContent =
+                    reading.waterTemperature + "°C";
+
+                document.getElementById("statWaveHeight").textContent =
+                    reading.waveHeight + " m";
+
+                document.getElementById("statWindSpeed").textContent =
+                    reading.windSpeed + " km/h";
+
+                document.getElementById("statSeaLevel").textContent =
+                    reading.seaLevel + " m";
+
+                // GET THE LOCATION NAME
+                const locationName = reading.location.locationName;
+
+                // FIND THE LOCATION IN OUR EXISTING ARRAY
+                const selectedLocation = locations.find(
+                    location => location.name === locationName
+                );
+
+                if (selectedLocation) {
+
+                    // UPDATE WITH DATABASE VALUES
+                    selectedLocation.temperature =
+                        reading.waterTemperature + "°C";
+
+                    selectedLocation.wave =
+                        reading.waveHeight + " m";
+
+                    selectedLocation.wind =
+                        reading.windSpeed + " km/h";
+
+                    selectedLocation.seaLevel =
+                        reading.seaLevel + " m";
+
+                    selectedLocation.status = "Data Available";
+
+                    // UPDATE THE MATCHING MAP POPUP
+                    if (selectedLocation.marker) {
+
+                        const updatedPopup = `
+        <div>
+            <h3>${selectedLocation.name}</h3>
+            <hr>
+            <p>🌡️ Temperature: ${selectedLocation.temperature}</p>
+            <p>🌊 Wave Height: ${selectedLocation.wave}</p>
+            <p>💨 Wind Speed: ${selectedLocation.wind}</p>
+            <p>📏 Sea Level: ${selectedLocation.seaLevel}</p>
+            <p><b>Status: ${selectedLocation.status}</b></p>
+        </div>
+    `;
+
+                        selectedLocation.marker.setPopupContent(updatedPopup);
+                    }
+
+                    // UPDATE DASHBOARD PANEL
+                    showLocationDetails(selectedLocation);
+
+                    console.log("Dashboard updated successfully!");
+                }
+
+            })
+
+            .catch(error => {
+                console.error("API Error:", error);
+            });
 
         // FIX MAP DISPLAY AFTER INITIALIZATION
 
